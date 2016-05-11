@@ -19,14 +19,15 @@
 #define REPEAT_RATE 100                                   // Rate to repeat button press (in milliseconds)
 
 // Needed for Pebble graphics
-Window *window;                 // Our program's window
+static Window *window;          // Our program's window
 static TextLayer *string_layer; // The layer that displays the string
 static TextLayer *cursor_layer; // The layer that displays the cursor
 static GFont font;              // Our custom monospaced font
+static int left_edge, top_edge; // Position of our string_layer
 
 // Declarations for the project
-int cursor_position = 0;                            // Cursor position.  We'll start at 0 (far left)
-char text_string[STRING_LENGTH] = "AAAAAAAA";    // Our string
+static int cursor_position = 0;                           // Cursor position.  We'll start at 0 (far left)
+static char text_string[STRING_LENGTH] = "AAAAAAAA";      // Our string
 
 
 // ------------------------------------------------------------------------ //
@@ -39,18 +40,14 @@ static void refresh_screen() {
 
 
 static void set_cursor_layer_position() {
-  Layer *window_layer = window_get_root_layer(window);
-  GRect window_frame = layer_get_frame(window_layer);
-  int left_side = (window_frame.size.w - TEXT_WIDTH) / 2;
-  int top_side = (window_frame.size.h - CHARACTER_HEIGHT) / 2;
-  layer_set_frame(text_layer_get_layer(cursor_layer), GRect(left_side + (cursor_position * CHARACTER_WIDTH), top_side + CHARACTER_HEIGHT, CHARACTER_WIDTH, CURSOR_THICKNESS));
+  layer_set_frame(text_layer_get_layer(cursor_layer), GRect(left_edge + (cursor_position * CHARACTER_WIDTH), top_edge + CHARACTER_HEIGHT, CHARACTER_WIDTH, CURSOR_THICKNESS));
 }
 
 
 // ------------------------------------------------------------------------ //
 //  Button Functions
 // ------------------------------------------------------------------------ //
-void select_short_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void select_short_click_handler(ClickRecognizerRef recognizer, void *context) {
   cursor_position++;
   if(cursor_position >= (STRING_LENGTH - 1))
     cursor_position = 0;
@@ -59,7 +56,7 @@ void select_short_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 
-void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
   cursor_position--;
   if(cursor_position < 0)
     cursor_position = STRING_LENGTH - 2;
@@ -68,7 +65,7 @@ void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 
-void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   text_string[cursor_position]--;
   if(text_string[cursor_position] < 'A')
     text_string[cursor_position] = 'Z';
@@ -76,7 +73,7 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 
-void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   text_string[cursor_position]++;
   if(text_string[cursor_position] > 'Z')
     text_string[cursor_position] = 'A';
@@ -84,7 +81,7 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 
-void click_config_provider(void *context) {
+static void click_config_provider(void *context) {
   window_single_repeating_click_subscribe(BUTTON_ID_UP, REPEAT_RATE, up_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_short_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_long_click_handler, NULL);
@@ -100,16 +97,16 @@ static void window_load(Window *window) {
   
   // Calculate where to put our layers
   GRect window_frame = layer_get_frame(window_layer);
-  int left_side = (window_frame.size.w - TEXT_WIDTH) / 2;
-  int top_side = (window_frame.size.h - CHARACTER_HEIGHT) / 2;
+  left_edge = (window_frame.size.w - TEXT_WIDTH) / 2;
+  top_edge = (window_frame.size.h - CHARACTER_HEIGHT) / 2;
 
   // Create the layer to show our cursor
-  cursor_layer = text_layer_create(GRect(left_side, top_side + CHARACTER_HEIGHT, CHARACTER_WIDTH, CURSOR_THICKNESS));
+  cursor_layer = text_layer_create(GRect(left_edge, top_edge + CHARACTER_HEIGHT, CHARACTER_WIDTH, CURSOR_THICKNESS));
   text_layer_set_background_color(cursor_layer, GColorWhite);
   layer_add_child(window_layer, text_layer_get_layer(cursor_layer));
   
   // Create the layer to display our string
-  string_layer = text_layer_create(GRect(left_side, top_side, TEXT_WIDTH, CHARACTER_HEIGHT));
+  string_layer = text_layer_create(GRect(left_edge, top_edge, TEXT_WIDTH, CHARACTER_HEIGHT));
   text_layer_set_text_color(string_layer, GColorWhite);
   text_layer_set_background_color(string_layer, GColorClear);
   text_layer_set_font(string_layer, font);
