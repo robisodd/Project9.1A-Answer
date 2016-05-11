@@ -30,7 +30,7 @@ char text_string[STRING_LENGTH] = "AAAAAAAA";    // Our string
 
 
 // ------------------------------------------------------------------------ //
-//  Drawing Functions
+//  Display Functions
 // ------------------------------------------------------------------------ //
 static void refresh_screen() {
   layer_mark_dirty(text_layer_get_layer(string_layer));
@@ -38,9 +38,6 @@ static void refresh_screen() {
 }
 
 
-// ------------------------------------------------------------------------ //
-//  String Functions
-// ------------------------------------------------------------------------ //
 static void set_cursor_layer_position() {
   Layer *window_layer = window_get_root_layer(window);
   GRect window_frame = layer_get_frame(window_layer);
